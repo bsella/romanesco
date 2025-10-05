@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "firefox",
+      "request": "launch",
+      "preLaunchTask": "npm: prepare",
+      "name": "Debug on Firefox",
+      "file": "${workspaceFolder}/index.html"
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "preLaunchTask": "npm: prepare",
+      "name": "Debug on Chrome",
+      "file": "${workspaceFolder}/index.html"
+    }
+  ]
+}
