@@ -10,5 +10,8 @@
     },
     "scripts": {
         "prepare": "node --trace-warnings node_modules/.bin/rolldown -c"
+    },
+    "devDependencies": {
+        "prettier": "3.6.2"
     }
 }
