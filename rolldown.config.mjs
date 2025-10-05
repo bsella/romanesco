@@ -1,12 +1,7 @@
-// For the main application
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-
-// For the GLSL parser
-import typescript from "rollup-plugin-ts";
 import { lezer } from "@lezer/generator/rollup";
+import { defineConfig } from "rolldown";
 
-export default [
-    // GLSL parser
+export default defineConfig([
     {
         input: "glsl_parser/src/index.ts",
         external: (id) => id != "tslib" && !/^(\.?\/|\w:)/.test(id),
@@ -14,16 +9,13 @@ export default [
             { file: "glsl_parser/dist/index.cjs", format: "cjs" },
             { dir: "glsl_parser/dist", format: "es" },
         ],
-        plugins: [lezer(), typescript()],
+        plugins: [lezer()],
     },
-
-    // Main application
     {
         input: "./src/editor/index.mjs",
         output: {
             file: "./dist/editor.bundle.js",
             format: "iife",
         },
-        plugins: [nodeResolve()],
     },
-];
+]);
