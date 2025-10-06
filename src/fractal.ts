@@ -56,7 +56,7 @@ var center_pos_location;
 var aspect_ratio_location;
 var time_location;
 
-function CompileFragmentShader(shader_src) {
+export function CompileFragmentShader(shader_src) {
     gl.detachShader(program, frag_shader);
 
     gl.shaderSource(frag_shader, shader_src);

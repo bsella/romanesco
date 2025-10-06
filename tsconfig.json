@@ -1,11 +1,9 @@
 {
     "compilerOptions": {
+        "target": "ES2019",
         "strict": true,
-        "target": "es6",
-        "module": "es2020",
         "newLine": "lf",
-        "declaration": true,
-        "moduleResolution": "node"
+        "module": "nodenext",
+        "moduleResolution": "nodenext"
     },
-    "include": ["src/*.ts", "glsl_parser/src/*.ts"]
 }

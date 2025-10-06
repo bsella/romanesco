@@ -2,11 +2,11 @@ import { EditorView, basicSetup } from "codemirror";
 import { keymap } from "@codemirror/view";
 import { lintGutter } from "@codemirror/lint";
 import { indentWithTab } from "@codemirror/commands";
+import { UpdateLints } from "./errors";
+import { theme, is_dark_mode } from "./themes";
+import { CompileFragmentShader } from "../fractal";
 
-import { UpdateLints } from "./errors.mjs";
-import { theme, is_dark_mode } from "./themes.js";
-
-import { GLSL } from "../../glsl_parser/dist/index";
+import { GLSL } from "../../glsl_parser/src/index";
 
 const initial_program = `vec2 rotated(float theta, vec2 z)
 {
@@ -158,20 +158,18 @@ toolbar_div.id = "toolbar";
 
 toolbar_div.setAttribute("dark", is_dark_mode);
 
-{
-    let run_button = document.createElement("button");
-    run_button.id = "run_button";
+let run_button = document.createElement("button");
+run_button.id = "run_button";
 
-    // put the run button on the right of the toolbox
-    run_button.style.marginLeft = "auto";
+// put the run button on the right of the toolbox
+run_button.style.marginLeft = "auto";
 
-    run_button.onclick = () => {
-        RunEditor(editor.state.doc);
-    };
+run_button.onclick = () => {
+    RunEditor(editor.state.doc);
+};
 
-    run_button.textContent = "RUN";
+run_button.textContent = "RUN";
 
-    toolbar_div.appendChild(run_button);
-}
+toolbar_div.appendChild(run_button);
 
 editor_div.appendChild(toolbar_div);

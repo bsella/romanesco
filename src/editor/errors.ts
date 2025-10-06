@@ -1,6 +1,7 @@
 import { setDiagnostics } from "@codemirror/lint";
+import { EditorView } from "codemirror";
 
-let UpdateLints = function (editor, errors, warnings) {
+let UpdateLints = function (editor: EditorView, errors, warnings) {
     let diagnostics = [];
 
     errors.forEach((err) => {
