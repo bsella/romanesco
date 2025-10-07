@@ -1,4 +1,7 @@
-import { EditorView, basicSetup } from "codemirror";
+// @ts-ignore
+import { basicSetup } from "codemirror";
+
+import { EditorView, KeyBinding } from "@codemirror/view";
 import { keymap } from "@codemirror/view";
 import { lintGutter } from "@codemirror/lint";
 import { indentWithTab } from "@codemirror/commands";
@@ -82,8 +85,8 @@ void main()
 
 const editor_div = document.getElementById("editor");
 
-var RunEditor = function () {
-    const header_code = `#version 300 es
+var RunEditor = function (target: EditorView) {
+    const header_code: string = `#version 300 es
 precision highp float;
 
 in vec2 z0;
@@ -122,41 +125,45 @@ vec2 conj(vec2 z)
 
 uniform float u_time;
 `;
-    const header_length = header_code.match(/\n/g).length;
+    const header_length = (header_code.match(/\n/g) ?? []).length;
 
-    const full_code = header_code + editor.state.doc;
+    const full_code = header_code + target.state.doc;
     const status = CompileFragmentShader(full_code);
 
     status.errors.forEach((err) => (err.line -= header_length));
     status.warnings.forEach((war) => (war.line -= header_length));
 
     UpdateLints(editor, status.errors, status.warnings);
+
+    return true;
 };
 
-const keymaps = [{ key: "Alt-Enter", run: RunEditor }];
+const keymaps: KeyBinding[] = [
+    { key: "Alt-Enter", run: RunEditor },
+    indentWithTab,
+];
 
 let editor = new EditorView({
     doc: initial_program,
     extensions: [
         keymap.of(keymaps),
-        keymap.of(indentWithTab),
         lintGutter(),
         basicSetup,
         EditorView.lineWrapping,
         theme,
         GLSL(),
     ],
-    parent: editor_div,
+    parent: editor_div!,
 });
 
-RunEditor(editor.state.doc);
+RunEditor(editor);
 
 // Toolbar
 
 let toolbar_div = document.createElement("div");
 toolbar_div.id = "toolbar";
 
-toolbar_div.setAttribute("dark", is_dark_mode);
+toolbar_div.setAttribute("dark", is_dark_mode.toString());
 
 let run_button = document.createElement("button");
 run_button.id = "run_button";
@@ -165,11 +172,11 @@ run_button.id = "run_button";
 run_button.style.marginLeft = "auto";
 
 run_button.onclick = () => {
-    RunEditor(editor.state.doc);
+    RunEditor(editor);
 };
 
 run_button.textContent = "RUN";
 
-toolbar_div.appendChild(run_button);
+toolbar_div!.appendChild(run_button);
 
-editor_div.appendChild(toolbar_div);
+editor_div!.appendChild(toolbar_div);

@@ -1,8 +1,17 @@
-import { setDiagnostics } from "@codemirror/lint";
-import { EditorView } from "codemirror";
+import { setDiagnostics, Diagnostic } from "@codemirror/lint";
+import { EditorView } from "@codemirror/view";
 
-let UpdateLints = function (editor: EditorView, errors, warnings) {
-    let diagnostics = [];
+export interface Issue {
+    line: number;
+    text: string;
+}
+
+let UpdateLints = function (
+    editor: EditorView,
+    errors: Issue[],
+    warnings: Issue[],
+) {
+    let diagnostics: Diagnostic[] = [];
 
     errors.forEach((err) => {
         const error_line = editor.state.doc.line(err.line);

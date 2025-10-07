@@ -1,4 +1,4 @@
-import { EditorView } from "codemirror";
+import { EditorView } from "@codemirror/view";
 
 export const is_dark_mode =
     window.matchMedia &&

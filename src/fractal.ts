@@ -1,10 +1,15 @@
-var output_canvas = document.getElementById("output");
+import { Issue } from "./editor/errors";
+
+let output_canvas: HTMLCanvasElement = document.getElementById(
+    "output",
+) as HTMLCanvasElement;
+
 output_canvas.oncontextmenu = function (e) {
     e.preventDefault();
     e.stopPropagation();
 };
 
-var gl = output_canvas.getContext("webgl2");
+let gl = output_canvas.getContext("webgl2")!;
 
 if (gl === null) {
     alert(
@@ -12,8 +17,8 @@ if (gl === null) {
     );
 }
 
-var quad_vao = gl.createVertexArray();
-var quad_vbo = gl.createBuffer();
+let quad_vao = gl.createVertexArray();
+let quad_vbo = gl.createBuffer();
 gl.bindVertexArray(quad_vao);
 gl.bindBuffer(gl.ARRAY_BUFFER, quad_vbo);
 gl.bufferData(
@@ -21,10 +26,10 @@ gl.bufferData(
     new Float32Array([-1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0]),
     gl.STATIC_DRAW,
 );
-gl.vertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, 0, 0);
+gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(0);
 
-var vertex_shader = gl.createShader(gl.VERTEX_SHADER);
+let vertex_shader = gl.createShader(gl.VERTEX_SHADER)!;
 gl.shaderSource(
     vertex_shader,
     `#version 300 es
@@ -46,36 +51,37 @@ gl.shaderSource(
 );
 gl.compileShader(vertex_shader);
 
-var frag_shader = gl.createShader(gl.FRAGMENT_SHADER);
+let frag_shader = gl.createShader(gl.FRAGMENT_SHADER)!;
 
-var program = gl.createProgram();
+let program = gl.createProgram()!;
 gl.attachShader(program, vertex_shader);
 
-var zoom_location;
-var center_pos_location;
-var aspect_ratio_location;
-var time_location;
+let zoom_location: WebGLUniformLocation;
+let center_pos_location: WebGLUniformLocation;
+let aspect_ratio_location: WebGLUniformLocation;
+let time_location: WebGLUniformLocation;
 
-export function CompileFragmentShader(shader_src) {
+export function CompileFragmentShader(shader_src: string) {
     gl.detachShader(program, frag_shader);
 
     gl.shaderSource(frag_shader, shader_src);
     gl.compileShader(frag_shader);
 
-    var errors = [];
-    var warnings = [];
+    let errors: Issue[] = [];
+    let warnings: Issue[] = [];
 
-    var issues = gl.getShaderInfoLog(frag_shader).split("\n");
-    for (var i = 0; i < issues.length; i++) {
-        const issue_text = issues[i];
-        var error_match = issue_text.match(/ERROR: 0:([0-9]+)(.*)/);
-        if (error_match) {
-            errors.push({ line: error_match[1], text: error_match[2] });
+    let issues = gl.getShaderInfoLog(frag_shader)!.split("\n");
+    for (let issue of issues) {
+        console.log(issue);
+        var error_match = issue.match(/ERROR: 0:([0-9]+)(.*)/);
+
+        if (error_match !== null) {
+            errors.push({ line: +error_match[1], text: error_match[2] });
         } else {
-            var warning_match = issue_text.match(/WARNING: 0:([0-9]+)(.*)\n/);
+            var warning_match = issue.match(/WARNING: 0:([0-9]+)(.*)\n/);
             if (warning_match) {
                 warnings.push({
-                    line: warning_match[1],
+                    line: +warning_match[1],
                     text: warning_match[2],
                 });
             }
@@ -85,12 +91,12 @@ export function CompileFragmentShader(shader_src) {
     gl.attachShader(program, frag_shader);
     gl.linkProgram(program);
 
-    zoom_location = gl.getUniformLocation(program, "u_zoom");
-    center_pos_location = gl.getUniformLocation(program, "u_center_pos");
-    aspect_ratio_location = gl.getUniformLocation(program, "u_aspect_ratio");
-    time_location = gl.getUniformLocation(program, "u_time");
+    zoom_location = gl.getUniformLocation(program, "u_zoom")!;
+    center_pos_location = gl.getUniformLocation(program, "u_center_pos")!;
+    aspect_ratio_location = gl.getUniformLocation(program, "u_aspect_ratio")!;
+    time_location = gl.getUniformLocation(program, "u_time")!;
 
-    const success = errors == "";
+    const success = errors.length == 0;
 
     if (success) {
         if (!rendering) {
@@ -163,8 +169,10 @@ function Render() {
 }
 
 function resize() {
-    var width = Math.trunc(gl.canvas.clientWidth * window.devicePixelRatio);
-    var height = Math.trunc(gl.canvas.clientHeight * window.devicePixelRatio);
+    var width = Math.trunc(output_canvas.clientWidth * window.devicePixelRatio);
+    var height = Math.trunc(
+        output_canvas.clientHeight * window.devicePixelRatio,
+    );
     if (gl.canvas.width != width || gl.canvas.height != height) {
         gl.canvas.width = width;
         gl.canvas.height = height;
@@ -175,9 +183,9 @@ function resize() {
 }
 new ResizeObserver(resize).observe(output_canvas);
 
-var mouse_down = 0;
-var last_mouse_x, last_mouse_y;
-var last_center_x, last_center_y;
+let mouse_down = 0;
+let last_mouse_x: number, last_mouse_y: number;
+let last_center_x: number, last_center_y: number;
 output_canvas.onmousedown = function (e) {
     if (mouse_down == 0) {
         last_center_x = center_x;
@@ -188,32 +196,36 @@ output_canvas.onmousedown = function (e) {
 output_canvas.onmouseup = function () {
     mouse_down--;
 };
-output_canvas.onmouseleave = function () {
+output_canvas.onmouseleave = function (e) {
     if (mouse_down > 0) {
-        output_canvas.onmouseup();
+        output_canvas.onmouseup!(e);
     }
 };
 output_canvas.onmouseenter = function (e) {
     if (e.buttons) {
-        output_canvas.onmousedown(e);
+        output_canvas.onmousedown!(e);
     }
 };
 
 output_canvas.onmousemove = function (e) {
-    const pos = e.currentTarget.getBoundingClientRect();
-    var x = (e.clientX - pos.left) * window.devicePixelRatio;
-    var y = (e.clientY - pos.top) * window.devicePixelRatio;
-    if (mouse_down == 0) {
-        last_mouse_x = x;
-        last_mouse_y = y;
-    } else {
-        center_x =
-            last_center_x +
-            ((last_mouse_x - x) / e.currentTarget.width) * zoom * aspect_ratio;
-        center_y =
-            last_center_y +
-            ((y - last_mouse_y) / e.currentTarget.height) * zoom;
-        invalidate();
+    if (e.currentTarget && e.currentTarget instanceof HTMLCanvasElement) {
+        const pos = e.currentTarget.getBoundingClientRect();
+        var x = (e.clientX - pos.left) * window.devicePixelRatio;
+        var y = (e.clientY - pos.top) * window.devicePixelRatio;
+        if (mouse_down == 0) {
+            last_mouse_x = x;
+            last_mouse_y = y;
+        } else {
+            center_x =
+                last_center_x +
+                ((last_mouse_x - x) / e.currentTarget.width) *
+                    zoom *
+                    aspect_ratio;
+            center_y =
+                last_center_y +
+                ((y - last_mouse_y) / e.currentTarget.height) * zoom;
+            invalidate();
+        }
     }
 };
 output_canvas.onwheel = function (e) {
@@ -221,9 +233,9 @@ output_canvas.onwheel = function (e) {
     invalidate();
 };
 
-var fingers = 0;
-var last_fingers_distance;
-var last_touches;
+let fingers = 0;
+let last_fingers_distance: number;
+let last_touches: TouchList;
 output_canvas.ontouchstart = function (e) {
     last_center_x = center_x;
     last_center_y = center_y;
@@ -246,20 +258,26 @@ output_canvas.ontouchend = function (e) {
 output_canvas.ontouchmove = function (e) {
     switch (fingers) {
         case 1:
-            const pos = e.currentTarget.getBoundingClientRect();
-            var x = e.touches[0].pageX - pos.left;
-            var y = e.touches[0].pageY - pos.top;
+            if (
+                e.currentTarget &&
+                e.currentTarget instanceof HTMLCanvasElement
+            ) {
+                const pos = e.currentTarget.getBoundingClientRect();
+                var x = e.touches[0].pageX - pos.left;
+                var y = e.touches[0].pageY - pos.top;
 
-            center_x =
-                last_center_x +
-                ((last_touches[0].pageX - x) / e.currentTarget.width) *
-                    zoom *
-                    aspect_ratio;
-            center_y =
-                last_center_y +
-                ((y - last_touches[0].pageY) / e.currentTarget.height) * zoom;
+                center_x =
+                    last_center_x +
+                    ((last_touches[0].pageX - x) / e.currentTarget.width) *
+                        zoom *
+                        aspect_ratio;
+                center_y =
+                    last_center_y +
+                    ((y - last_touches[0].pageY) / e.currentTarget.height) *
+                        zoom;
 
-            invalidate();
+                invalidate();
+            }
             break;
         case 2:
             var x = e.touches[0].pageX - e.touches[1].pageX;
