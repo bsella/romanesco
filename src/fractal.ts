@@ -17,32 +17,42 @@ if (gl === null) {
     );
 }
 
-let quad_vao = gl.createVertexArray();
-let quad_vbo = gl.createBuffer();
-gl.bindVertexArray(quad_vao);
-gl.bindBuffer(gl.ARRAY_BUFFER, quad_vbo);
-gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array([-1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0]),
-    gl.STATIC_DRAW,
-);
-gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(0);
-
 let vertex_shader = gl.createShader(gl.VERTEX_SHADER)!;
 gl.shaderSource(
     vertex_shader,
     `#version 300 es
 	
-	in vec2 pos;
-
 	uniform float u_zoom;
 	uniform vec2  u_center_pos;
 	uniform float u_aspect_ratio;
 
 	out vec2 z0;
 
+	// Instead of using a fullscreen quad, we strech one triangle to cover the whole screen.
+	// This method makes it possible to render a fullscreen without using a vertex buffer.
+	// No fragments are generated outside of the viewport thanks to clipping.
+
+    //  (-1,3)|\
+    //        | \
+    //        |  \
+    //        |   \
+    //  (-1,1)|____\ (1,1)
+    //        |####|\
+    //        |####| \
+    //        |####|  \
+    //        |####|   \
+    // (-1,-1)|####|____\ (3,-1)
+    //             (1,-1)
+
 	void main(){
+		vec2 pos;
+		switch(gl_VertexID)
+		{
+			case 0: pos = vec2(-1.0, -1.0); break;
+			case 1: pos = vec2(-1.0,  3.0); break;
+			case 2: pos = vec2( 3.0, -1.0); break;
+		}
+
 		gl_Position = vec4(pos,0.0,1.0);
 		z0          = (pos + vec2(1.0)) * 0.5;
 		z0.x        = u_center_pos.x + (z0.x * u_zoom - u_zoom * 0.5) * u_aspect_ratio;
@@ -140,9 +150,8 @@ function Render() {
         gl.uniform1f(aspect_ratio_location, aspect_ratio);
         gl.uniform1f(time_location, time);
 
-        // Render the fullscreen quad
-        gl.bindVertexArray(quad_vao);
-        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+        // Render the fullscreen triangle
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 3);
 
         // Wait for the GPU to finish rendering the frame
         gl.finish();
