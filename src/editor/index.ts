@@ -7,7 +7,7 @@ import { lintGutter } from "@codemirror/lint";
 import { indentWithTab } from "@codemirror/commands";
 import { UpdateLints } from "./errors";
 import { theme, is_dark_mode } from "./themes";
-import { CompileFragmentShader } from "../fractal";
+import { Context } from "../fractal";
 
 import { GLSL } from "../../glsl_parser/src/index";
 
@@ -85,6 +85,11 @@ void main()
 
 const editor_div = document.getElementById("editor");
 
+let e = new Context();
+e.initGl();
+e.createVertexShader();
+e.handleEvents();
+
 var RunEditor = function (target: EditorView) {
     const header_code: string = `#version 300 es
 precision highp float;
@@ -128,7 +133,9 @@ uniform float u_time;
     const header_length = (header_code.match(/\n/g) ?? []).length;
 
     const full_code = header_code + target.state.doc;
-    const status = CompileFragmentShader(full_code);
+
+    new ResizeObserver(() => e.resize()).observe(e.output_canvas);
+    const status = e.compileFragmentShader(full_code);
 
     status.errors.forEach((err) => (err.line -= header_length));
     status.warnings.forEach((war) => (war.line -= header_length));
