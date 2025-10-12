@@ -1,15 +1,7 @@
-// @ts-ignore
-import { basicSetup } from "codemirror";
-
-import { EditorView, KeyBinding } from "@codemirror/view";
-import { keymap } from "@codemirror/view";
-import { lintGutter } from "@codemirror/lint";
-import { indentWithTab } from "@codemirror/commands";
+import { EditorView } from "@codemirror/view";
 import { UpdateLints } from "./editor/errors";
-import { theme, is_dark_mode } from "./editor/themes";
 import { RenderSurface } from "./render_surface";
-
-import { GLSL } from "../glsl_parser/src/index";
+import { Editor } from "./editor";
 
 const initial_program = `vec2 rotated(float theta, vec2 z)
 {
@@ -83,12 +75,10 @@ void main()
   * vec4(rainbow(time +float(best_i)/float(max_iterations)*best), 1.0);
 }`;
 
-const editor_div = document.getElementById("editor");
-
 const output_canvas = document.getElementById("output") as HTMLCanvasElement;
 
-let e = new RenderSurface(output_canvas);
-e.handleEvents();
+let render_surface = new RenderSurface(output_canvas);
+render_surface.handleEvents();
 
 var RunEditor = function (target: EditorView) {
     const header_code: string = `#version 300 es
@@ -134,55 +124,18 @@ uniform float u_time;
 
     const full_code = header_code + target.state.doc;
 
-    const status = e.compileFragmentShader(full_code);
+    const status = render_surface.compileFragmentShader(full_code);
 
     status.errors.forEach((err) => (err.line -= header_length));
     status.warnings.forEach((war) => (war.line -= header_length));
 
-    UpdateLints(editor, status.errors, status.warnings);
+    UpdateLints(target, status.errors, status.warnings);
 
     return true;
 };
 
-const keymaps: KeyBinding[] = [
-    { key: "Alt-Enter", run: RunEditor },
-    indentWithTab,
-];
+const editor_div = document.getElementById("editor")!;
 
-let editor = new EditorView({
-    doc: initial_program,
-    extensions: [
-        keymap.of(keymaps),
-        lintGutter(),
-        basicSetup,
-        EditorView.lineWrapping,
-        theme,
-        GLSL(),
-    ],
-    parent: editor_div!,
-});
+let editor = new Editor(editor_div, initial_program, RunEditor);
 
-RunEditor(editor);
-
-// Toolbar
-
-let toolbar_div = document.createElement("div");
-toolbar_div.id = "toolbar";
-
-toolbar_div.setAttribute("dark", is_dark_mode.toString());
-
-let run_button = document.createElement("button");
-run_button.id = "run_button";
-
-// put the run button on the right of the toolbox
-run_button.style.marginLeft = "auto";
-
-run_button.onclick = () => {
-    RunEditor(editor);
-};
-
-run_button.textContent = "RUN";
-
-toolbar_div!.appendChild(run_button);
-
-editor_div!.appendChild(toolbar_div);
+editor.run();
