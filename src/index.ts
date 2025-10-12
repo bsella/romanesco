@@ -80,7 +80,7 @@ const output_canvas = document.getElementById("output") as HTMLCanvasElement;
 let render_surface = new RenderSurface(output_canvas);
 render_surface.handleEvents();
 
-var RunEditor = function (target: EditorView) {
+const RunEditor = function (target: EditorView) {
     const header_code: string = `#version 300 es
 precision highp float;
 

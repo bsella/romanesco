@@ -169,7 +169,7 @@ export class RenderSurface {
         const frame_time = current_time - this.previous_time;
 
         // Compute the remaining time to catch up with the framerate
-        var remaining_time = this.period - frame_time;
+        let remaining_time = this.period - frame_time;
 
         // Not sure what will happen if setTimeout is called with a negative
         // delay, but just to be sure
@@ -180,10 +180,10 @@ export class RenderSurface {
     }
 
     resize() {
-        var width = Math.trunc(
+        const width = Math.trunc(
             this.canvas.clientWidth * window.devicePixelRatio,
         );
-        var height = Math.trunc(
+        const height = Math.trunc(
             this.canvas.clientHeight * window.devicePixelRatio,
         );
 
@@ -234,8 +234,8 @@ export class RenderSurface {
             }
 
             const pos = e.currentTarget.getBoundingClientRect();
-            var x = (e.clientX - pos.left) * window.devicePixelRatio;
-            var y = (e.clientY - pos.top) * window.devicePixelRatio;
+            const x = (e.clientX - pos.left) * window.devicePixelRatio;
+            const y = (e.clientY - pos.top) * window.devicePixelRatio;
             if (this.mouse_down == 0) {
                 this.last_mouse_x = x;
                 this.last_mouse_y = y;
@@ -268,8 +268,8 @@ export class RenderSurface {
             this.fingers++;
 
             if (this.fingers == 2) {
-                var x = e.touches[0].pageX - e.touches[1].pageX;
-                var y = e.touches[0].pageY - e.touches[1].pageY;
+                const x = e.touches[0].pageX - e.touches[1].pageX;
+                const y = e.touches[0].pageY - e.touches[1].pageY;
                 this.last_fingers_distance = Math.sqrt(x * x + y * y);
             }
         };
@@ -288,8 +288,8 @@ export class RenderSurface {
                         e.currentTarget instanceof HTMLCanvasElement
                     ) {
                         const pos = e.currentTarget.getBoundingClientRect();
-                        var x = e.touches[0].pageX - pos.left;
-                        var y = e.touches[0].pageY - pos.top;
+                        const x = e.touches[0].pageX - pos.left;
+                        const y = e.touches[0].pageY - pos.top;
 
                         this.center_x =
                             this.last_center_x +
@@ -307,9 +307,9 @@ export class RenderSurface {
                     }
                     break;
                 case 2:
-                    var x = e.touches[0].pageX - e.touches[1].pageX;
-                    var y = e.touches[0].pageY - e.touches[1].pageY;
-                    var fingers_distance = Math.sqrt(x * x + y * y);
+                    const x = e.touches[0].pageX - e.touches[1].pageX;
+                    const y = e.touches[0].pageY - e.touches[1].pageY;
+                    const fingers_distance = Math.sqrt(x * x + y * y);
                     this.zoom *= this.last_fingers_distance / fingers_distance;
                     this.last_fingers_distance = fingers_distance;
 
@@ -335,12 +335,12 @@ export class RenderSurface {
 
         for (let issue of issues) {
             console.log(issue);
-            var error_match = issue.match(/ERROR: 0:([0-9]+)(.*)/);
+            const error_match = issue.match(/ERROR: 0:([0-9]+)(.*)/);
 
             if (error_match !== null) {
                 errors.push({ line: +error_match[1], text: error_match[2] });
             } else {
-                var warning_match = issue.match(/WARNING: 0:([0-9]+)(.*)\n/);
+                const warning_match = issue.match(/WARNING: 0:([0-9]+)(.*)\n/);
                 if (warning_match) {
                     warnings.push({
                         line: +warning_match[1],
