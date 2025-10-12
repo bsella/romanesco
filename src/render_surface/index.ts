@@ -1,4 +1,5 @@
-import { Issue } from "./editor/errors";
+import { Issue } from "../editor/errors";
+import { InputHandler } from "./input";
 
 class FragmentShaderUniforms {
     public zoom_location: WebGLUniformLocation;
@@ -24,12 +25,6 @@ class FragmentShaderUniforms {
 export class RenderSurface {
     canvas;
 
-    mouse_down = 0;
-    last_mouse_x = 0;
-    last_mouse_y = 0;
-    last_center_x = 0;
-    last_center_y = 0;
-
     gl: WebGL2RenderingContext;
     program: WebGLProgram;
     frag_shader: WebGLShader;
@@ -37,9 +32,6 @@ export class RenderSurface {
 
     uniforms: FragmentShaderUniforms | null = null;
 
-    zoom = 2.5;
-    center_x = -0.5;
-    center_y = 0.0;
     aspect_ratio;
 
     time0 = new Date().getTime();
@@ -51,9 +43,7 @@ export class RenderSurface {
     valid = false;
     rendering = false;
 
-    fingers = 0;
-    last_fingers_distance: number = 0;
-    last_touches: TouchList | null = null;
+    input;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -125,6 +115,8 @@ export class RenderSurface {
         }
 
         this.gl.attachShader(this.program, this.vertex_shader);
+
+        this.input = new InputHandler(this.canvas);
     }
 
     invalidate() {
@@ -140,11 +132,17 @@ export class RenderSurface {
             this.gl.useProgram(this.program);
 
             // Upload all the uniforms to the gl program
-            this.gl.uniform1f(this.uniforms.zoom_location, this.zoom);
+            this.gl.uniform1f(
+                this.uniforms.zoom_location,
+                this.input.getZoom(),
+            );
+
+            const [center_x, center_y] = this.input.getCenter();
+
             this.gl.uniform2f(
                 this.uniforms.center_pos_location,
-                this.center_x,
-                this.center_y,
+                center_x,
+                center_y,
             );
             this.gl.uniform1f(
                 this.uniforms.aspect_ratio_location,
@@ -195,132 +193,6 @@ export class RenderSurface {
         }
 
         this.invalidate();
-    }
-
-    handleEvents() {
-        this.canvas.oncontextmenu = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        };
-
-        this.canvas.onmousedown = () => {
-            if (this.mouse_down == 0) {
-                this.last_center_x = this.center_x;
-                this.last_center_y = this.center_y;
-            }
-            this.mouse_down++;
-        };
-
-        this.canvas.onmouseup = () => {
-            this.mouse_down--;
-        };
-        this.canvas.onmouseleave = (e) => {
-            if (this.mouse_down > 0) {
-                this.canvas.onmouseup!(e);
-            }
-        };
-        this.canvas.onmouseenter = (e) => {
-            if (e.buttons) {
-                this.canvas.onmousedown!(e);
-            }
-        };
-
-        this.canvas.onmousemove = (e) => {
-            if (
-                !e.currentTarget ||
-                !(e.currentTarget instanceof HTMLCanvasElement)
-            ) {
-                return;
-            }
-
-            const pos = e.currentTarget.getBoundingClientRect();
-            const x = (e.clientX - pos.left) * window.devicePixelRatio;
-            const y = (e.clientY - pos.top) * window.devicePixelRatio;
-            if (this.mouse_down == 0) {
-                this.last_mouse_x = x;
-                this.last_mouse_y = y;
-            } else {
-                this.center_x =
-                    this.last_center_x +
-                    ((this.last_mouse_x - x) / e.currentTarget.width) *
-                        this.zoom *
-                        this.aspect_ratio;
-
-                this.center_y =
-                    this.last_center_y +
-                    ((y - this.last_mouse_y) / e.currentTarget.height) *
-                        this.zoom;
-
-                this.invalidate();
-            }
-        };
-
-        this.canvas.onwheel = (e) => {
-            this.zoom *= 1 + 0.002 * e.deltaY;
-            this.invalidate();
-        };
-
-        this.canvas.ontouchstart = (e) => {
-            this.last_center_x = this.center_x;
-            this.last_center_y = this.center_y;
-            this.last_touches = e.touches;
-
-            this.fingers++;
-
-            if (this.fingers == 2) {
-                const x = e.touches[0].pageX - e.touches[1].pageX;
-                const y = e.touches[0].pageY - e.touches[1].pageY;
-                this.last_fingers_distance = Math.sqrt(x * x + y * y);
-            }
-        };
-
-        this.canvas.ontouchend = (e) => {
-            this.last_touches = e.touches;
-            this.fingers--;
-        };
-
-        this.canvas.ontouchmove = (e) => {
-            switch (this.fingers) {
-                case 1:
-                    if (
-                        this.last_touches &&
-                        e.currentTarget &&
-                        e.currentTarget instanceof HTMLCanvasElement
-                    ) {
-                        const pos = e.currentTarget.getBoundingClientRect();
-                        const x = e.touches[0].pageX - pos.left;
-                        const y = e.touches[0].pageY - pos.top;
-
-                        this.center_x =
-                            this.last_center_x +
-                            ((this.last_touches[0].pageX - x) /
-                                e.currentTarget.width) *
-                                this.zoom *
-                                this.aspect_ratio;
-                        this.center_y =
-                            this.last_center_y +
-                            ((y - this.last_touches[0].pageY) /
-                                e.currentTarget.height) *
-                                this.zoom;
-
-                        this.invalidate();
-                    }
-                    break;
-                case 2:
-                    const x = e.touches[0].pageX - e.touches[1].pageX;
-                    const y = e.touches[0].pageY - e.touches[1].pageY;
-                    const fingers_distance = Math.sqrt(x * x + y * y);
-                    this.zoom *= this.last_fingers_distance / fingers_distance;
-                    this.last_fingers_distance = fingers_distance;
-
-                    this.last_touches = e.touches;
-
-                    this.invalidate();
-                    break;
-                default:
-                    break;
-            }
-        };
     }
 
     compileFragmentShader(shader_src: string) {
