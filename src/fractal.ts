@@ -1,5 +1,26 @@
 import { Issue } from "./editor/errors";
 
+class FragmentShaderUniforms {
+    public zoom_location: WebGLUniformLocation;
+    public center_pos_location: WebGLUniformLocation;
+    public aspect_ratio_location: WebGLUniformLocation;
+    public time_location: WebGLUniformLocation;
+
+    constructor(gl: WebGL2RenderingContext, program: WebGLProgram) {
+        this.zoom_location = gl.getUniformLocation(program, "u_zoom")!;
+
+        this.center_pos_location = gl.getUniformLocation(
+            program,
+            "u_center_pos",
+        )!;
+        this.aspect_ratio_location = gl.getUniformLocation(
+            program,
+            "u_aspect_ratio",
+        )!;
+        this.time_location = gl.getUniformLocation(program, "u_time")!;
+    }
+}
+
 export class Context {
     output_canvas = document.getElementById("output") as HTMLCanvasElement;
 
@@ -9,15 +30,12 @@ export class Context {
     last_center_x = 0;
     last_center_y = 0;
 
-    gl = this.output_canvas.getContext("webgl2")!;
-    program = this.gl.createProgram()!;
-    frag_shader = this.gl.createShader(this.gl.FRAGMENT_SHADER)!;
-    vertex_shader = this.gl.createShader(this.gl.VERTEX_SHADER)!;
+    gl: WebGL2RenderingContext;
+    program: WebGLProgram;
+    frag_shader: WebGLShader;
+    vertex_shader: WebGLShader;
 
-    zoom_location: WebGLUniformLocation;
-    center_pos_location: WebGLUniformLocation;
-    aspect_ratio_location: WebGLUniformLocation;
-    time_location: WebGLUniformLocation;
+    uniforms: FragmentShaderUniforms | null = null;
 
     zoom = 2.5;
     center_x = -0.5;
@@ -35,17 +53,19 @@ export class Context {
 
     fingers = 0;
     last_fingers_distance: number = 0;
-    last_touches: TouchList;
+    last_touches: TouchList | null = null;
 
-    initGl() {
+    constructor() {
+        this.gl = this.output_canvas.getContext("webgl2")!;
+        this.program = this.gl.createProgram()!;
+        this.frag_shader = this.gl.createShader(this.gl.FRAGMENT_SHADER)!;
+        this.vertex_shader = this.gl.createShader(this.gl.VERTEX_SHADER)!;
         if (!this.gl) {
-            alert(
+            throw new Error(
                 "Unable to initialize WebGL2. Your browser or machine may not support it.",
             );
         }
-    }
 
-    createVertexShader() {
         this.gl.shaderSource(
             this.vertex_shader,
             `#version 300 es
@@ -108,20 +128,23 @@ export class Context {
     Render() {
         const current_time = new Date().getTime();
 
-        if (!this.valid) {
+        if (this.uniforms && !this.valid) {
             const time = (current_time - this.time0) / 1000.0;
 
             this.gl.useProgram(this.program);
 
             // Upload all the uniforms to the gl program
-            this.gl.uniform1f(this.zoom_location, this.zoom);
+            this.gl.uniform1f(this.uniforms.zoom_location, this.zoom);
             this.gl.uniform2f(
-                this.center_pos_location,
+                this.uniforms.center_pos_location,
                 this.center_x,
                 this.center_y,
             );
-            this.gl.uniform1f(this.aspect_ratio_location, this.aspect_ratio);
-            this.gl.uniform1f(this.time_location, time);
+            this.gl.uniform1f(
+                this.uniforms.aspect_ratio_location,
+                this.aspect_ratio,
+            );
+            this.gl.uniform1f(this.uniforms.time_location, time);
 
             // Render the fullscreen triangle
             this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 3);
@@ -254,6 +277,7 @@ export class Context {
             switch (this.fingers) {
                 case 1:
                     if (
+                        this.last_touches &&
                         e.currentTarget &&
                         e.currentTarget instanceof HTMLCanvasElement
                     ) {
@@ -323,23 +347,7 @@ export class Context {
         this.gl.attachShader(this.program, this.frag_shader);
         this.gl.linkProgram(this.program);
 
-        this.zoom_location = this.gl.getUniformLocation(
-            this.program,
-            "u_zoom",
-        )!;
-
-        this.center_pos_location = this.gl.getUniformLocation(
-            this.program,
-            "u_center_pos",
-        )!;
-        this.aspect_ratio_location = this.gl.getUniformLocation(
-            this.program,
-            "u_aspect_ratio",
-        )!;
-        this.time_location = this.gl.getUniformLocation(
-            this.program,
-            "u_time",
-        )!;
+        this.uniforms = new FragmentShaderUniforms(this.gl, this.program);
 
         const success = errors.length == 0;
 

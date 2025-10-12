@@ -86,8 +86,6 @@ void main()
 const editor_div = document.getElementById("editor");
 
 let e = new Context();
-e.initGl();
-e.createVertexShader();
 e.handleEvents();
 
 var RunEditor = function (target: EditorView) {
