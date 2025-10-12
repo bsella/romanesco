@@ -5,11 +5,11 @@ import { EditorView, KeyBinding } from "@codemirror/view";
 import { keymap } from "@codemirror/view";
 import { lintGutter } from "@codemirror/lint";
 import { indentWithTab } from "@codemirror/commands";
-import { UpdateLints } from "./errors";
-import { theme, is_dark_mode } from "./themes";
-import { Context } from "../fractal";
+import { UpdateLints } from "./editor/errors";
+import { theme, is_dark_mode } from "./editor/themes";
+import { Context } from "./fractal";
 
-import { GLSL } from "../../glsl_parser/src/index";
+import { GLSL } from "../glsl_parser/src/index";
 
 const initial_program = `vec2 rotated(float theta, vec2 z)
 {
