@@ -21,8 +21,8 @@ class FragmentShaderUniforms {
     }
 }
 
-export class Context {
-    output_canvas = document.getElementById("output") as HTMLCanvasElement;
+export class RenderSurface {
+    canvas;
 
     mouse_down = 0;
     last_mouse_x = 0;
@@ -40,7 +40,7 @@ export class Context {
     zoom = 2.5;
     center_x = -0.5;
     center_y = 0.0;
-    aspect_ratio = this.output_canvas.width / this.output_canvas.height;
+    aspect_ratio;
 
     time0 = new Date().getTime();
     previous_time = this.time0;
@@ -55,8 +55,12 @@ export class Context {
     last_fingers_distance: number = 0;
     last_touches: TouchList | null = null;
 
-    constructor() {
-        this.gl = this.output_canvas.getContext("webgl2")!;
+    constructor(canvas: HTMLCanvasElement) {
+        this.canvas = canvas;
+
+        this.aspect_ratio = this.canvas.width / this.canvas.height;
+
+        this.gl = this.canvas.getContext("webgl2")!;
         this.program = this.gl.createProgram()!;
         this.frag_shader = this.gl.createShader(this.gl.FRAGMENT_SHADER)!;
         this.vertex_shader = this.gl.createShader(this.gl.VERTEX_SHADER)!;
@@ -65,6 +69,8 @@ export class Context {
                 "Unable to initialize WebGL2. Your browser or machine may not support it.",
             );
         }
+
+        new ResizeObserver(() => this.resize()).observe(this.canvas);
 
         this.gl.shaderSource(
             this.vertex_shader,
@@ -175,10 +181,10 @@ export class Context {
 
     resize() {
         var width = Math.trunc(
-            this.output_canvas.clientWidth * window.devicePixelRatio,
+            this.canvas.clientWidth * window.devicePixelRatio,
         );
         var height = Math.trunc(
-            this.output_canvas.clientHeight * window.devicePixelRatio,
+            this.canvas.clientHeight * window.devicePixelRatio,
         );
 
         if (this.gl.canvas.width != width || this.gl.canvas.height != height) {
@@ -192,12 +198,12 @@ export class Context {
     }
 
     handleEvents() {
-        this.output_canvas.oncontextmenu = (e) => {
+        this.canvas.oncontextmenu = (e) => {
             e.preventDefault();
             e.stopPropagation();
         };
 
-        this.output_canvas.onmousedown = () => {
+        this.canvas.onmousedown = () => {
             if (this.mouse_down == 0) {
                 this.last_center_x = this.center_x;
                 this.last_center_y = this.center_y;
@@ -205,21 +211,21 @@ export class Context {
             this.mouse_down++;
         };
 
-        this.output_canvas.onmouseup = () => {
+        this.canvas.onmouseup = () => {
             this.mouse_down--;
         };
-        this.output_canvas.onmouseleave = (e) => {
+        this.canvas.onmouseleave = (e) => {
             if (this.mouse_down > 0) {
-                this.output_canvas.onmouseup!(e);
+                this.canvas.onmouseup!(e);
             }
         };
-        this.output_canvas.onmouseenter = (e) => {
+        this.canvas.onmouseenter = (e) => {
             if (e.buttons) {
-                this.output_canvas.onmousedown!(e);
+                this.canvas.onmousedown!(e);
             }
         };
 
-        this.output_canvas.onmousemove = (e) => {
+        this.canvas.onmousemove = (e) => {
             if (
                 !e.currentTarget ||
                 !(e.currentTarget instanceof HTMLCanvasElement)
@@ -249,12 +255,12 @@ export class Context {
             }
         };
 
-        this.output_canvas.onwheel = (e) => {
+        this.canvas.onwheel = (e) => {
             this.zoom *= 1 + 0.002 * e.deltaY;
             this.invalidate();
         };
 
-        this.output_canvas.ontouchstart = (e) => {
+        this.canvas.ontouchstart = (e) => {
             this.last_center_x = this.center_x;
             this.last_center_y = this.center_y;
             this.last_touches = e.touches;
@@ -268,12 +274,12 @@ export class Context {
             }
         };
 
-        this.output_canvas.ontouchend = (e) => {
+        this.canvas.ontouchend = (e) => {
             this.last_touches = e.touches;
             this.fingers--;
         };
 
-        this.output_canvas.ontouchmove = (e) => {
+        this.canvas.ontouchmove = (e) => {
             switch (this.fingers) {
                 case 1:
                     if (
