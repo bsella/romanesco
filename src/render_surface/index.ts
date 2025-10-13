@@ -50,15 +50,18 @@ export class RenderSurface {
 
         this.aspect_ratio = this.canvas.width / this.canvas.height;
 
-        this.gl = this.canvas.getContext("webgl2")!;
-        this.program = this.gl.createProgram()!;
-        this.frag_shader = this.gl.createShader(this.gl.FRAGMENT_SHADER)!;
-        this.vertex_shader = this.gl.createShader(this.gl.VERTEX_SHADER)!;
-        if (!this.gl) {
+        let gl = this.canvas.getContext("webgl2");
+        if (!gl) {
             throw new Error(
                 "Unable to initialize WebGL2. Your browser or machine may not support it.",
             );
         }
+
+        this.gl = gl;
+
+        this.program = this.gl.createProgram()!;
+        this.frag_shader = this.gl.createShader(this.gl.FRAGMENT_SHADER)!;
+        this.vertex_shader = this.gl.createShader(this.gl.VERTEX_SHADER)!;
 
         new ResizeObserver(() => this.resize()).observe(this.canvas);
 
