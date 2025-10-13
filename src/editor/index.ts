@@ -7,6 +7,7 @@ import { lintGutter } from "@codemirror/lint";
 import { indentWithTab } from "@codemirror/commands";
 import { theme, is_dark_mode } from "./themes";
 import { GLSL } from "../../glsl_parser/src/index";
+import { checkboxPlugin } from "./decorations";
 
 export class Editor {
     editor_view;
@@ -27,6 +28,7 @@ export class Editor {
             extensions: [
                 keymap.of(keymaps),
                 lintGutter(),
+                checkboxPlugin,
                 basicSetup,
                 EditorView.lineWrapping,
                 theme,
