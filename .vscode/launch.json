@@ -6,14 +6,16 @@
       "request": "launch",
       "preLaunchTask": "npm: prepare",
       "name": "Debug on Firefox",
-      "file": "${workspaceFolder}/index.html"
+      "url": "file:///${workspaceFolder}/index.html",
+      "webRoot": "${workspaceFolder}"
     },
     {
       "type": "chrome",
       "request": "launch",
       "preLaunchTask": "npm: prepare",
       "name": "Debug on Chrome",
-      "file": "${workspaceFolder}/index.html"
+      "url": "file:///${workspaceFolder}/index.html",
+      "webRoot": "${workspaceFolder}"
     }
   ]
 }

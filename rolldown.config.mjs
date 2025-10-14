@@ -7,6 +7,7 @@ export default defineConfig([
         output: {
             file: "./dist/dist.js",
             format: "iife",
+            sourcemap: true,
         },
         plugins: [lezer()],
     },
