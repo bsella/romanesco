@@ -1,7 +1,20 @@
 export class InputHandler {
-    private zoom = 2.5;
-    private center_x = -0.5;
-    private center_y = 0.0;
+    private _zoom = 2.5;
+
+    public get zoom() {
+        return this._zoom;
+    }
+
+    public set zoom(value) {
+        this._zoom = value;
+    }
+
+    private _center_x = -0.5;
+    private _center_y = 0.0;
+
+    public get center() {
+        return { center_x: this._center_x, center_y: this._center_y };
+    }
 
     private mouse_down = 0;
     private last_mouse_x = 0;
@@ -21,8 +34,8 @@ export class InputHandler {
 
         canvas.onmousedown = () => {
             if (this.mouse_down == 0) {
-                this.last_center_x = this.center_x;
-                this.last_center_y = this.center_y;
+                this.last_center_x = this._center_x;
+                this.last_center_y = this._center_y;
             }
             this.mouse_down++;
         };
@@ -60,13 +73,13 @@ export class InputHandler {
                 const aspect_ratio =
                     e.currentTarget.width / e.currentTarget.height;
 
-                this.center_x =
+                this._center_x =
                     this.last_center_x +
                     ((this.last_mouse_x - x) / e.currentTarget.width) *
                         this.zoom *
                         aspect_ratio;
 
-                this.center_y =
+                this._center_y =
                     this.last_center_y +
                     ((y - this.last_mouse_y) / e.currentTarget.height) *
                         this.zoom;
@@ -78,8 +91,8 @@ export class InputHandler {
         };
 
         canvas.ontouchstart = (e) => {
-            this.last_center_x = this.center_x;
-            this.last_center_y = this.center_y;
+            this.last_center_x = this._center_x;
+            this.last_center_y = this._center_y;
             this.last_touches = e.touches;
 
             this.fingers++;
@@ -111,13 +124,13 @@ export class InputHandler {
                         const aspect_ratio =
                             e.currentTarget.width / e.currentTarget.height;
 
-                        this.center_x =
+                        this._center_x =
                             this.last_center_x +
                             ((this.last_touches[0].pageX - x) /
                                 e.currentTarget.width) *
                                 this.zoom *
                                 aspect_ratio;
-                        this.center_y =
+                        this._center_y =
                             this.last_center_y +
                             ((y - this.last_touches[0].pageY) /
                                 e.currentTarget.height) *
@@ -138,12 +151,5 @@ export class InputHandler {
                     break;
             }
         };
-    }
-
-    getZoom() {
-        return this.zoom;
-    }
-    getCenter() {
-        return [this.center_x, this.center_y];
     }
 }

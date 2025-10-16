@@ -161,12 +161,9 @@ export class RenderSurface {
             this.gl.useProgram(this.program);
 
             // Upload all the uniforms to the gl program
-            this.gl.uniform1f(
-                this.uniforms.zoom_location,
-                this.input.getZoom(),
-            );
+            this.gl.uniform1f(this.uniforms.zoom_location, this.input.zoom);
 
-            const [center_x, center_y] = this.input.getCenter();
+            const { center_x, center_y } = this.input.center;
 
             this.gl.uniform2f(
                 this.uniforms.center_pos_location,
