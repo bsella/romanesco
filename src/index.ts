@@ -123,12 +123,20 @@ uniform float u_time;
 
     const full_code = header_code + target.state.doc;
 
-    const status = render_surface.compileFragmentShader(full_code);
+    const result = render_surface.compileFragmentShader(full_code);
 
-    status.errors.forEach((err) => (err.line -= header_length));
-    status.warnings.forEach((war) => (war.line -= header_length));
-
-    UpdateLints(target, status.errors, status.warnings);
+    result
+        .map((shaderStatus) => {
+            UpdateLints(target, [], []);
+            render_surface.startRendering();
+        })
+        .mapError((issues) => {
+            render_surface.stopRendering();
+            render_surface.clear();
+            issues.errors.forEach((err) => (err.line -= header_length));
+            issues.warnings.forEach((war) => (war.line -= header_length));
+            UpdateLints(target, issues.errors, issues.warnings);
+        });
 
     return true;
 };

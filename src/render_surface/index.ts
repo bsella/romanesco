@@ -1,3 +1,4 @@
+import { Result } from "typescript-result";
 import { Issue } from "../editor/errors";
 import { InputHandler } from "./input";
 
@@ -22,6 +23,13 @@ class FragmentShaderUniforms {
     }
 }
 
+export interface ShaderState {}
+
+export interface ShaderIssues {
+    errors: Issue[];
+    warnings: Issue[];
+}
+
 export class RenderSurface {
     canvas;
 
@@ -43,6 +51,8 @@ export class RenderSurface {
     valid = false;
     rendering = false;
 
+    renderTimeoutHandle = 0;
+
     input;
 
     constructor(canvas: HTMLCanvasElement) {
@@ -58,6 +68,8 @@ export class RenderSurface {
         }
 
         this.gl = gl;
+
+        this.gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
         this.program = this.gl.createProgram()!;
         this.frag_shader = this.gl.createShader(this.gl.FRAGMENT_SHADER)!;
@@ -118,6 +130,7 @@ export class RenderSurface {
         }
 
         this.gl.attachShader(this.program, this.vertex_shader);
+        this.gl.attachShader(this.program, this.frag_shader);
 
         this.input = new InputHandler(this.canvas);
     }
@@ -126,7 +139,20 @@ export class RenderSurface {
         this.valid = false;
     }
 
-    Render() {
+    startRendering() {
+        this.renderTimeoutHandle = setTimeout(this.render.bind(this));
+    }
+
+    stopRendering() {
+        clearTimeout(this.renderTimeoutHandle);
+        this.renderTimeoutHandle = 0;
+    }
+
+    clear() {
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    }
+
+    private render() {
         const current_time = new Date().getTime();
 
         if (this.uniforms && !this.valid) {
@@ -177,10 +203,14 @@ export class RenderSurface {
         if (remaining_time < 0) remaining_time = 0;
 
         this.previous_time = current_time;
-        setTimeout(() => this.Render(), remaining_time);
+
+        this.renderTimeoutHandle = setTimeout(
+            this.render.bind(this),
+            remaining_time,
+        );
     }
 
-    resize() {
+    private resize() {
         const width = Math.trunc(
             this.canvas.clientWidth * window.devicePixelRatio,
         );
@@ -198,8 +228,9 @@ export class RenderSurface {
         this.invalidate();
     }
 
-    compileFragmentShader(shader_src: string) {
-        this.gl.detachShader(this.program, this.frag_shader);
+    compileFragmentShader(
+        shader_src: string,
+    ): Result<ShaderState, ShaderIssues> {
         this.gl.shaderSource(this.frag_shader, shader_src);
         this.gl.compileShader(this.frag_shader);
 
@@ -209,7 +240,6 @@ export class RenderSurface {
         let issues = this.gl.getShaderInfoLog(this.frag_shader)!.split("\n");
 
         for (let issue of issues) {
-            console.log(issue);
             const error_match = issue.match(/ERROR: 0:([0-9]+)(.*)/);
 
             if (error_match !== null) {
@@ -225,20 +255,16 @@ export class RenderSurface {
             }
         }
 
-        this.gl.attachShader(this.program, this.frag_shader);
-        this.gl.linkProgram(this.program);
-
-        this.uniforms = new FragmentShaderUniforms(this.gl, this.program);
-
         const success = errors.length == 0;
 
         if (success) {
-            if (!this.rendering) {
-                this.Render();
-                this.rendering = true;
-            }
-        } else this.rendering = false;
+            this.gl.linkProgram(this.program);
+            this.uniforms = new FragmentShaderUniforms(this.gl, this.program);
+            return Result.ok({});
+        }
 
-        return { success, errors, warnings };
+        this.uniforms = null;
+
+        return Result.error({ errors, warnings });
     }
 }

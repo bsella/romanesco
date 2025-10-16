@@ -5,12 +5,13 @@
         "@lezer/generator": "^1.8.0",
         "codemirror": "^6.0.2",
         "rolldown": "^1.0.0-beta.41",
-        "typescript": "^5.9.3"
+        "typescript-result": "^3.5.2"
     },
     "scripts": {
         "prepare": "node --trace-warnings node_modules/.bin/rolldown -c"
     },
     "devDependencies": {
-        "prettier": "3.6.2"
+        "prettier": "3.6.2",
+        "typescript": "^5.9.3"
     }
 }
