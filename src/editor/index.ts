@@ -35,28 +35,11 @@ export class Editor {
             parent,
         });
 
-        // Toolbar
-
-        let toolbar_div = document.createElement("div");
-        toolbar_div.id = "toolbar";
-
-        toolbar_div.setAttribute("dark", is_dark_mode.toString());
-
-        let run_button = document.createElement("button");
-        run_button.id = "run_button";
-
-        // put the run button on the right of the toolbox
-        run_button.style.marginLeft = "auto";
+        let run_button = <HTMLElement>document.querySelector("#run-button");
 
         run_button.onclick = () => {
             run(this.editor_view);
         };
-
-        run_button.textContent = "RUN";
-
-        toolbar_div!.appendChild(run_button);
-
-        parent.appendChild(toolbar_div);
     }
 
     run() {

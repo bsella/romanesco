@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, user-scalable=no" />
 </head>
 <body>
-    <canvas id="output"></canvas>
-    <div id="editor"></div>
+    <div id="screen">
+        <canvas id="output"></canvas>
+
+        <div id="container">
+            <div id="toolbar">
+                <button class="ui-button" id="run-button">▶</button>
+            </div>
+            <div id="editor"></div>
+        </div>
+    </div>
     <script src="dist/dist.js"></script>
 </body>
