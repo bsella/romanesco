@@ -8,7 +8,7 @@
         "typescript-result": "^3.5.2"
     },
     "scripts": {
-        "prepare": "node --trace-warnings node_modules/.bin/rolldown -c"
+        "prepare": "rolldown -c"
     },
     "devDependencies": {
         "prettier": "3.6.2",
